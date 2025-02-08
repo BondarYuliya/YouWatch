@@ -5,8 +5,8 @@ import androidx.annotation.RequiresApi
 import com.groupping.youwatch.business_logic.video_groups.DirectoryEntity
 
 data class VideoItem(
-    val id: Int,
-    val youtubeVideoId: Id,
+    val databaseId: Int,
+    val id: Id,
     val snippet: Snippet,
     val channelId: Long,
     val directoryId: Int? = null,
@@ -20,14 +20,14 @@ data class Thumbnail(val url: String)
 
 data class YouTubeResponse(
     val items: List<VideoItem>,
-    val nextPageToken: String? // Token for the next page of results
+    val nextPageToken: String?
 )
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun VideoItemEntity.toVideoItem(): VideoItem {
     return VideoItem(
-        id = this.id,
-        youtubeVideoId = Id(videoId = this.videoId),
+        databaseId = this.id,
+        id = Id(videoId = this.videoId),
         snippet = Snippet(
             title = this.title,
             thumbnails = Thumbnails(

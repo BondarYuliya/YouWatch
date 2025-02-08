@@ -21,7 +21,7 @@ fun VideoPlayerScreen(video: VideoItem) {
 
     VideoPlayerScreenMain(
         lifecycleOwner = lifecycleOwner,
-        videoId = video.youtubeVideoId.videoId,
+        videoId = video.id.videoId,
         onStartWatching = { viewModel.startWatching(video) },
         onStoppedAt = { second -> viewModel.stoppedAt(second)},
         onStopWatching = { isFinished -> viewModel.stopWatching(video, isFinished) },

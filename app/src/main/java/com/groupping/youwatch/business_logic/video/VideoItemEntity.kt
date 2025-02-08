@@ -42,7 +42,7 @@ data class VideoItemEntity(
 @RequiresApi(Build.VERSION_CODES.O)
 fun VideoItem.toEntity(channelId: Long): VideoItemEntity {
     return VideoItemEntity(
-        videoId = this.youtubeVideoId.videoId,
+        videoId = this.id.videoId,
         title = this.snippet.title,
         thumbnailUrl = this.snippet.thumbnails.medium.url,
         channelId = channelId,

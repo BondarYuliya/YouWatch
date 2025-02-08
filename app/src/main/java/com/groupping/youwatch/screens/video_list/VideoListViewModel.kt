@@ -1,5 +1,6 @@
 package com.groupping.youwatch.screens.video_list
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import androidx.lifecycle.LiveData
@@ -56,12 +57,15 @@ class VideoListViewModel @Inject constructor(
     private suspend fun fetchYoutubeVideosInChannel(channelId: String) {
         when (val result = repository.fetchAllVideos(channelId)) {
             is YouTubeRepository.FetchingVideosResult.Success -> {
+                Log.e("GGGGGGGGG", "fetchAllVideos Success: ${result.videos}")
                 _youtubeVideos.postValue(result.videos)
             }
             is YouTubeRepository.FetchingVideosResult.Error -> {
+                Log.e("GGGGGGGGG", "fetchAllVideos Error: ${result.exception.message}")
                 _error.postValue("Failed to load videos: ${result.exception.message}")
             }
             is YouTubeRepository.FetchingVideosResult.Empty -> {
+                Log.e("GGGGGGGGG", "fetchAllVideos Empty")
                 _error.postValue("No videos found for the channel.")
             }
         }
@@ -73,7 +77,7 @@ class VideoListViewModel @Inject constructor(
     ): List<VideoItem> {
         val databaseVideoIds = databaseVideos.map { it.videoId } // Extract videoIds from databaseVideos
         return youtubeVideos.filter { youtubeVideo ->
-            youtubeVideo.youtubeVideoId.videoId !in databaseVideoIds
+            youtubeVideo.id.videoId !in databaseVideoIds
         }
     }
 
@@ -97,9 +101,9 @@ class VideoListViewModel @Inject constructor(
 
     fun videoItemDialogPickerSelected(videoItem: VideoItem, directoryId: Int) {
         viewModelScope.launch(Dispatchers.Main) {
-            videoItemsRepository.updateDirectory(videoItem.youtubeVideoId.videoId, directoryId)
+            videoItemsRepository.updateDirectory(videoItem.id.videoId, directoryId)
             val currentVideos = _databaseVideos.value?.toMutableList() ?: mutableListOf()
-            val videoIndex = currentVideos.indexOfFirst { it.videoId == videoItem.youtubeVideoId.videoId }
+            val videoIndex = currentVideos.indexOfFirst { it.videoId == videoItem.id.videoId }
             if (videoIndex != -1) {
                 val updatedVideo = currentVideos[videoIndex].copy(directoryId = directoryId)
                 currentVideos[videoIndex] = updatedVideo

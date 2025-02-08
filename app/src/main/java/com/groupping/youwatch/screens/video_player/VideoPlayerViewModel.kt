@@ -29,8 +29,8 @@ class VideoPlayerViewModel @Inject constructor(
         viewModelScope.launch {
             val currentTime = System.currentTimeMillis()
             startTime.postValue(currentTime)
-            val history = videoWatchHistoryDao.getWatchHistory(video.youtubeVideoId.videoId) ?: VideoWatchHistory(
-                videoId = video.youtubeVideoId.videoId,
+            val history = videoWatchHistoryDao.getWatchHistory(video.id.videoId) ?: VideoWatchHistory(
+                videoId = video.id.videoId,
                 startTime = currentTime,
                 endTime = null,
                 durationWatched = 0,
@@ -53,7 +53,7 @@ class VideoPlayerViewModel @Inject constructor(
             val durationWatched = endTime - (startTime.value?: 0)
 
             videoWatchHistoryDao.updateWatchHistory(
-                video.youtubeVideoId.videoId,
+                video.id.videoId,
                 endTime,
                 durationWatched,
                 currentTime,
@@ -71,7 +71,7 @@ class VideoPlayerViewModel @Inject constructor(
         video.duration = duration
         currentVideo.postValue(video)
         viewModelScope.launch {
-            videoItemsDao.updateVideoDurationById(video.id, duration)
+            videoItemsDao.updateVideoDurationById(video.databaseId, duration)
         }
     }
 }
