@@ -41,7 +41,7 @@ fun VideoPlayerScreen(video: VideoItem) {
             videoId = video.id.videoId,
             watchState = it,
             onStoppedAt = { second -> viewModel.stoppedAt(second) },
-            onStopWatching = { isFinished -> viewModel.stopWatching(video, isFinished) },
+            onStopWatching = { viewModel.stopWatching(video)},
             onDurationFetched = { duration -> viewModel.onVideoDurationFetched(video, duration) }
         )
     }
@@ -59,7 +59,7 @@ fun VideoPlayerScreenMain(
     videoId: String,
     watchState: Float,
     onStoppedAt: (Float) -> Unit,
-    onStopWatching: (Boolean) -> Unit,
+    onStopWatching: () -> Unit,
     onDurationFetched: (Float) -> Unit
 ) {
     AndroidView(
@@ -92,7 +92,7 @@ fun VideoPlayerScreenMain(
                 ) {
                     super.onStateChange(youTubePlayer, state)
                     if (state == PlayerConstants.PlayerState.ENDED) {
-                        onStopWatching(true)
+                        onStopWatching()
                     }
                 }
 

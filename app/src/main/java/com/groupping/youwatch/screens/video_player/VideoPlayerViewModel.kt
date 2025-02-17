@@ -54,23 +54,18 @@ class VideoPlayerViewModel @Inject constructor(
         }
     }
 
-    fun stopWatching(video: VideoItem, isCompleted: Boolean = false) {
-        viewModelScope.launch(Dispatchers.IO) {
+    fun stopWatching(video: VideoItem) {
+        viewModelScope.launch(Dispatchers.Main.immediate) {
             val totalDuration = currentVideo.value?.duration
             val notWatchedPart = totalDuration?.minus(stoppedAt.value ?: 0f) ?: 0f
 
-            val currentCompleted =
-                isCompleted || (notWatchedPart <= 30) || (totalDuration?.let { notWatchedPart / it > 0.9 }
-                    ?: false)
-            val currentTime = if (currentCompleted) 0f else stoppedAt.value ?: 0f
-
-            val endTime = System.currentTimeMillis()
-
             val durationWatched: Long = when {
-                currentCompleted -> 100
                 totalDuration != null -> (100 * (1 - notWatchedPart / totalDuration)).toLong()
                 else -> 0
             }
+
+            val currentCompleted = durationWatched > 94
+            val currentTime = if (currentCompleted) 0f else stoppedAt.value ?: 0f
 
             currentWatchHistory.value?.let { currentHistory ->
                 val updatedWatchHistory = VideoWatchHistory(
