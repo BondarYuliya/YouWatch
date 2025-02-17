@@ -7,8 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.groupping.youwatch.business_logic.channels.DatabaseChannelDetails
 import com.groupping.youwatch.business_logic.channels.FetchChannelDetailsUseCase
 import com.groupping.youwatch.business_logic.channels.YouTubeChannelDao
-import com.groupping.youwatch.screens.common.NavigationState
-import com.groupping.youwatch.screens.common.NavigationViewModel
+import com.groupping.youwatch.screens.common.navigation.NavigationState
+import com.groupping.youwatch.screens.common.navigation.NavigationViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject

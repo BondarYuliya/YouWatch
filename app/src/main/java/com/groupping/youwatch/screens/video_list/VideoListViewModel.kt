@@ -4,16 +4,14 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import com.groupping.youwatch.business_logic.video.VideoItem
-import com.groupping.youwatch.business_logic.video.VideoItemEntity
+import com.groupping.youwatch.business_logic.video.VideoItemWithWatchingHistory
 import com.groupping.youwatch.business_logic.video.VideoItemsRepository
 import com.groupping.youwatch.business_logic.video.toEntity
-import com.groupping.youwatch.business_logic.video.toVideoItem
 import com.groupping.youwatch.common.network.YouTubeRepository
-import com.groupping.youwatch.screens.common.NavigationState
-import com.groupping.youwatch.screens.common.NavigationViewModel
+import com.groupping.youwatch.screens.common.navigation.NavigationState
+import com.groupping.youwatch.screens.common.navigation.NavigationViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
@@ -22,16 +20,14 @@ import javax.inject.Inject
 class VideoListViewModel @Inject constructor(
     navigationState: NavigationState,
     private val repository: YouTubeRepository,
-    private val videoItemsRepository: VideoItemsRepository,
+    private val videoItemsRepository: VideoItemsRepository
 ) : NavigationViewModel(navigationState) {
 
     private val _youtubeVideos = MutableLiveData<List<VideoItem>>(arrayListOf())
-    private val _databaseVideos = MutableLiveData<List<VideoItemEntity>>(arrayListOf())
-    val allVideos: LiveData<List<VideoItem>> = MediatorLiveData<List<VideoItem>>().apply {
-        addSource(_databaseVideos) { databaseVideos ->
-            value = databaseVideos.map { it.toVideoItem()}
-        }
-    }
+    private val _databaseVideos = MutableLiveData<List<VideoItemWithWatchingHistory>>(arrayListOf())
+
+    val allVideos: LiveData<List<VideoItemWithWatchingHistory>> = _databaseVideos
+
 
     private val _showDirectoryPickerDialog = MutableLiveData(false)
     val showDirectoryPickerDialog: LiveData<Boolean> = _showDirectoryPickerDialog
@@ -41,7 +37,7 @@ class VideoListViewModel @Inject constructor(
 
     fun fetchAllVideos(databaseChannelId: Long, channelId: String) {
         viewModelScope.launch(Dispatchers.Main) {
-            _databaseVideos.postValue(videoItemsRepository.getVideosByChannelId(databaseChannelId))
+            _databaseVideos.postValue(videoItemsRepository.fetchVideosWithWatchHistory(databaseChannelId))
             fetchYoutubeVideosInChannel(channelId)
             _youtubeVideos.value?.let { youtubeVideos ->
                 updateVideosForChannel(
@@ -51,7 +47,6 @@ class VideoListViewModel @Inject constructor(
                 )
             }
         }
-
     }
 
     private suspend fun fetchYoutubeVideosInChannel(channelId: String) {
@@ -72,10 +67,10 @@ class VideoListViewModel @Inject constructor(
     }
 
     private fun findNewVideos(
-        databaseVideos: List<VideoItemEntity>,
+        databaseVideos: List<VideoItemWithWatchingHistory>,
         youtubeVideos: List<VideoItem>
     ): List<VideoItem> {
-        val databaseVideoIds = databaseVideos.map { it.videoId } // Extract videoIds from databaseVideos
+        val databaseVideoIds = databaseVideos.map { it.videoItem.id.videoId } // Extract videoIds from databaseVideos
         return youtubeVideos.filter { youtubeVideo ->
             youtubeVideo.id.videoId !in databaseVideoIds
         }
@@ -83,7 +78,7 @@ class VideoListViewModel @Inject constructor(
 
     private suspend fun updateVideosForChannel(
         databaseChannelId: Long,
-        databaseVideos: List<VideoItemEntity>,
+        databaseVideos: List<VideoItemWithWatchingHistory>,
         youtubeVideos: List<VideoItem>
     ) {
         val newVideos = findNewVideos(databaseVideos, youtubeVideos)
@@ -91,7 +86,7 @@ class VideoListViewModel @Inject constructor(
 
         if (newVideoEntities.isNotEmpty()) {
             videoItemsRepository.insertVideos(newVideoEntities)
-            _databaseVideos.postValue(videoItemsRepository.getVideosByChannelId(databaseChannelId))
+            _databaseVideos.postValue(videoItemsRepository.fetchVideosWithWatchHistory(databaseChannelId))
         }
     }
 
@@ -103,9 +98,12 @@ class VideoListViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.Main) {
             videoItemsRepository.updateDirectory(videoItem.id.videoId, directoryId)
             val currentVideos = _databaseVideos.value?.toMutableList() ?: mutableListOf()
-            val videoIndex = currentVideos.indexOfFirst { it.videoId == videoItem.id.videoId }
+
+            val videoIndex = currentVideos.indexOfFirst { it.videoItem.id.videoId == videoItem.id.videoId }
+
             if (videoIndex != -1) {
-                val updatedVideo = currentVideos[videoIndex].copy(directoryId = directoryId)
+                val updatedVideoItem = currentVideos[videoIndex].videoItem.copy(directoryId = directoryId)
+                val updatedVideo = currentVideos[videoIndex].copy(videoItem = updatedVideoItem)
                 currentVideos[videoIndex] = updatedVideo
                 _databaseVideos.postValue(currentVideos)
             }

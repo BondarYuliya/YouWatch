@@ -10,8 +10,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.groupping.youwatch.business_logic.video.VideoItem
-import com.groupping.youwatch.business_logic.video_groups.toListItems
-import com.groupping.youwatch.screens.common.Screen
+import com.groupping.youwatch.business_logic.video_groups.toDirectoryItems
+import com.groupping.youwatch.screens.common.VideoListScreenMain
+import com.groupping.youwatch.screens.common.navigation.Screen
 import com.groupping.youwatch.screens.directories.DirectoryViewModel
 
 @Composable
@@ -19,18 +20,17 @@ fun VideoListScreen(databaseChannelId: Long, channelId: String) {
     val viewModel: VideoListViewModel = viewModel()
     val dialogListViewModel: DirectoryViewModel = viewModel()
     val directories by dialogListViewModel.directories.observeAsState(emptyList())
-    val listItems = remember(directories) { directories.toListItems() }
+    val directoryItems = remember(directories) { directories.toDirectoryItems() }
     val currentParentId by dialogListViewModel.currentParentId.observeAsState(null)
     val showDirectoryPickerDialog by viewModel.showDirectoryPickerDialog.observeAsState(false)
 
     var selectedVideoItemForDirectoryPicker by remember { mutableStateOf<VideoItem?>(null) }
 
+    val videoItems by viewModel.allVideos.observeAsState(emptyList())
 
     LaunchedEffect(Unit) {
         viewModel.fetchAllVideos(databaseChannelId, channelId)
     }
-
-    val videoItems by viewModel.allVideos.observeAsState(emptyList())
 
     VideoListScreenMain(videoItems = videoItems,
         onVideoItemClicked = { videoItemClicked ->
@@ -51,7 +51,7 @@ fun VideoListScreen(databaseChannelId: Long, channelId: String) {
     if (showDirectoryPickerDialog) {
         DirectoryPickerDialog(
             video = selectedVideoItemForDirectoryPicker,
-            listItems = listItems,
+            directoryItems = directoryItems,
             currentParentId = currentParentId,
             onNavigateBackIfNotInRoot = {
                 dialogListViewModel.getParentOfCurrentParent { parentIdOfCurrentParent ->

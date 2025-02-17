@@ -1,19 +1,24 @@
 package com.groupping.youwatch.business_logic.video_groups
 
-import com.groupping.youwatch.business_logic.video.VideoItem
+import com.groupping.youwatch.business_logic.video.VideoItemWithWatchingHistory
 import com.groupping.youwatch.business_logic.video.VideoItemsDao
 import com.groupping.youwatch.business_logic.video.toVideoItem
+import com.groupping.youwatch.business_logic.video_watching.VideoWatchHistoryDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class DirectoryManagerUseCase @Inject constructor(private val directoryDao: DirectoryDao, private val videoItemsDao: VideoItemsDao) {
+class DirectoryManagerUseCase @Inject constructor(
+    private val directoryDao: DirectoryDao,
+    private val videoItemsDao: VideoItemsDao,
+    private val videoWatchHistoryDao: VideoWatchHistoryDao
+) {
 
     sealed class Result {
         data class DirectoryContentDefined(
             val parentId: Int,
             val directories: List<DirectoryEntity>,
-            val videos: List<VideoItem>
+            val videos: List<VideoItemWithWatchingHistory>
         ) : Result()
 
         data object DirectoryContentUnDefined : Result()
@@ -45,16 +50,16 @@ class DirectoryManagerUseCase @Inject constructor(private val directoryDao: Dire
     }
 
     suspend fun addNewDirectory(
-        currentId: Int,
+        parentId: Int,
         currentDirectories: List<DirectoryEntity>,
         directoryName: String
     ): Result = withContext(Dispatchers.IO) {
-        val newDirectory = DirectoryEntity(directoryName = directoryName, parentId = currentId)
+        val newDirectory = DirectoryEntity(directoryName = directoryName, parentId = parentId)
         directoryDao.insertDirectory(newDirectory)
         return@withContext Result.DirectoryContentDefined(
-            currentId,
+            parentId,
             currentDirectories + listOf(newDirectory),
-            getVideosForDirectory(currentId)
+            getVideosForDirectory(parentId)
         )
     }
 
@@ -67,8 +72,17 @@ class DirectoryManagerUseCase @Inject constructor(private val directoryDao: Dire
         }
 
 
-    suspend fun getVideosForDirectory(directoryId: Int): List<VideoItem> = withContext(Dispatchers.IO) {
-        val videoEntityList = videoItemsDao.getVideosByDirectoryId(directoryId)
-        return@withContext videoEntityList.map { it.toVideoItem() }
-    }
+    private suspend fun getVideosForDirectory(directoryId: Int): List<VideoItemWithWatchingHistory> =
+        withContext(Dispatchers.IO) {
+            val videoEntityList = videoItemsDao.getVideosByDirectoryId(directoryId)
+
+            val videoItemsWithHistory = videoEntityList.map { videoEntity ->
+                val watchHistory = videoWatchHistoryDao.getWatchHistory(videoEntity.videoId)
+                VideoItemWithWatchingHistory(
+                    videoItem = videoEntity.toVideoItem(),
+                    watchHistory = watchHistory
+                )
+            }
+            return@withContext videoItemsWithHistory
+        }
 }

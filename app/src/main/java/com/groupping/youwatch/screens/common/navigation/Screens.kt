@@ -1,4 +1,4 @@
-package com.groupping.youwatch.screens.common
+package com.groupping.youwatch.screens.common.navigation
 
 import VideoPlayerScreen
 import androidx.compose.runtime.Composable

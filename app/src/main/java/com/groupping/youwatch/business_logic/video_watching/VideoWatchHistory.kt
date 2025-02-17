@@ -5,11 +5,11 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "video_watch_history")
 data class VideoWatchHistory(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
     val videoId: String,
     val startTime: Long,
-    val endTime: Long?,
     val durationWatched: Long,
-    val stoppedAt: Float, // timestamp in video
+    val stoppedAt: Float,
     val isCompleted: Boolean
 )

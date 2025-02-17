@@ -1,12 +1,17 @@
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.groupping.youwatch.business_logic.video.VideoItem
+import com.groupping.youwatch.screens.common.LifecycleObserving
 import com.groupping.youwatch.screens.video_player.VideoPlayerViewModel
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.PlayerConstants
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
@@ -18,20 +23,33 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTube
 fun VideoPlayerScreen(video: VideoItem) {
     val viewModel: VideoPlayerViewModel = viewModel()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val watchState by viewModel.watchState.observeAsState(null)
 
-    VideoPlayerScreenMain(
+    LifecycleObserving(
         lifecycleOwner = lifecycleOwner,
-        videoId = video.id.videoId,
-        onStartWatching = { viewModel.startWatching(video) },
-        onStoppedAt = { second -> viewModel.stoppedAt(second)},
-        onStopWatching = { isFinished -> viewModel.stopWatching(video, isFinished) },
-        onDurationFetched = { duration -> viewModel.onVideoDurationFetched(video, duration) })
+        eventsList = listOf(
+            Lifecycle.Event.ON_PAUSE to { viewModel.stopWatching(video) },
+            Lifecycle.Event.ON_STOP to { viewModel.stopWatching(video) },
+            Lifecycle.Event.ON_DESTROY to { viewModel.stopWatching(video) },
+            Lifecycle.Event.ON_RESUME to { viewModel.getCurrentWatchHistory(video) }
+        )
+    )
+
+    watchState?.let {
+        VideoPlayerScreenMain(
+            lifecycleOwner = lifecycleOwner,
+            videoId = video.id.videoId,
+            watchState = it,
+            onStoppedAt = { second -> viewModel.stoppedAt(second) },
+            onStopWatching = { isFinished -> viewModel.stopWatching(video, isFinished) },
+            onDurationFetched = { duration -> viewModel.onVideoDurationFetched(video, duration) }
+        )
+    }
 
     BackHandler {
         viewModel.stopWatching(video)
         viewModel.goBack()
     }
-
 }
 
 
@@ -39,7 +57,7 @@ fun VideoPlayerScreen(video: VideoItem) {
 fun VideoPlayerScreenMain(
     lifecycleOwner: LifecycleOwner,
     videoId: String,
-    onStartWatching: () -> Unit,
+    watchState: Float,
     onStoppedAt: (Float) -> Unit,
     onStopWatching: (Boolean) -> Unit,
     onDurationFetched: (Float) -> Unit
@@ -55,8 +73,12 @@ fun VideoPlayerScreenMain(
             youTubePlayerView.initialize(object : AbstractYouTubePlayerListener() {
 
                 override fun onReady(youTubePlayer: YouTubePlayer) {
-                    youTubePlayer.loadVideo(videoId, 0f)
-                    onStartWatching()
+
+                    watchState?.let {
+                        Log.e("GGGGGGGGG youTubePlayer", "$it")
+                        youTubePlayer.loadVideo(videoId, it)
+                    }
+
                 }
 
                 override fun onCurrentSecond(youTubePlayer: YouTubePlayer, second: Float) {

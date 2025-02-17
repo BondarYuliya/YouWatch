@@ -40,7 +40,7 @@ fun VideoItemEntity.toVideoItem(): VideoItem {
     )
 }
 
-sealed class ListItem {
-    data class Directory(val directory: DirectoryEntity) : ListItem()
-    data class Video(val video: VideoItem) : ListItem()
+sealed class DirectoryItem {
+    data class Directory(val directory: DirectoryEntity) : DirectoryItem()
+    data class Video(val video: VideoItemWithWatchingHistory) : DirectoryItem()
 }

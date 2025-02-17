@@ -5,12 +5,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.groupping.youwatch.business_logic.video.ListItem
+import com.groupping.youwatch.business_logic.video.DirectoryItem
 import com.groupping.youwatch.business_logic.video.VideoItem
+import com.groupping.youwatch.business_logic.video.VideoItemWithWatchingHistory
 import com.groupping.youwatch.business_logic.video_groups.DirectoryEntity
 import com.groupping.youwatch.business_logic.video_groups.DirectoryManagerUseCase
-import com.groupping.youwatch.screens.common.NavigationState
-import com.groupping.youwatch.screens.common.NavigationViewModel
+import com.groupping.youwatch.screens.common.navigation.NavigationState
+import com.groupping.youwatch.screens.common.navigation.NavigationViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,11 +26,11 @@ class DirectoryViewModel @Inject constructor(
     private val _directories = MutableLiveData<List<DirectoryEntity>>(emptyList())
     val directories: LiveData<List<DirectoryEntity>> get() = _directories
 
-    private val _currentVideos = MutableLiveData<List<VideoItem>>(emptyList())
-    private val _combinedList = MediatorLiveData<List<ListItem>>().apply {
+    private val _currentVideos = MutableLiveData<List<VideoItemWithWatchingHistory>>(emptyList())
+    private val _combinedList = MediatorLiveData<List<DirectoryItem>>().apply {
         fun update() {
-            val directories = _directories.value?.map { ListItem.Directory(it) } ?: emptyList()
-            val videos = _currentVideos.value?.map { ListItem.Video(it) } ?: emptyList()
+            val directories = _directories.value?.map { DirectoryItem.Directory(it) } ?: emptyList()
+            val videos = _currentVideos.value?.map { DirectoryItem.Video(it) } ?: emptyList()
             value = directories + videos
         }
 
@@ -37,7 +38,7 @@ class DirectoryViewModel @Inject constructor(
         addSource(_currentVideos) { update() }
     }
 
-    val combinedList: LiveData<List<ListItem>> get() = _combinedList
+    val combinedList: LiveData<List<DirectoryItem>> get() = _combinedList
 
     private val _currentParentId = MutableLiveData<Int?>(null) // Root by default
     val currentParentId: LiveData<Int?> get() = _currentParentId
@@ -50,38 +51,6 @@ class DirectoryViewModel @Inject constructor(
 
     fun setAddButtonDialogVisibility(isShown: Boolean) {
         _isDialogShown.postValue(isShown)
-    }
-
-
-
-    init {
-        fetchInitialDirectory()
-    }
-
-    private fun fetchDirectories(parentId: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            updateCurrentDirectory(directoryManagerUseCase.fetchUsualDirectory(parentId))
-        }
-    }
-
-    private fun fetchInitialDirectory() {
-        viewModelScope.launch(Dispatchers.IO) {
-            updateCurrentDirectory(directoryManagerUseCase.fetchInitialDirectory())
-        }
-    }
-
-    private fun updateCurrentDirectory(result: DirectoryManagerUseCase.Result) {
-        when (result) {
-            is DirectoryManagerUseCase.Result.DirectoryContentDefined -> {
-                _currentParentId.postValue(result.parentId)
-                _directories.postValue(result.directories)
-                _currentVideos.postValue(result.videos)
-            }
-
-            is DirectoryManagerUseCase.Result.DirectoryContentUnDefined -> {
-
-            }
-        }
     }
 
     fun navigateToDirectory(parentId: Int?) {
@@ -99,12 +68,12 @@ class DirectoryViewModel @Inject constructor(
     }
 
     fun onAddDirectoryConfirmed(directoryName: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _currentParentId.value?.let { currentId ->
+        viewModelScope.launch(Dispatchers.Main.immediate) {
+            _currentParentId.value?.let { parentId ->
                 val currentDirectories = _directories.value ?: emptyList()
                 updateCurrentDirectory(
                     directoryManagerUseCase.addNewDirectory(
-                        currentId,
+                        parentId,
                         currentDirectories,
                         directoryName
                     )
@@ -115,5 +84,30 @@ class DirectoryViewModel @Inject constructor(
 
     fun onDirectoryNameChanged(directoryName: TextFieldValue) {
         _newDirectoryName.postValue(directoryName)
+    }
+
+
+    private fun fetchDirectories(parentId: Int) {
+        viewModelScope.launch(Dispatchers.Main.immediate) {
+            updateCurrentDirectory(directoryManagerUseCase.fetchUsualDirectory(parentId))
+        }
+    }
+
+    private fun fetchInitialDirectory() {
+        viewModelScope.launch(Dispatchers.Main.immediate) {
+            updateCurrentDirectory(directoryManagerUseCase.fetchInitialDirectory())
+        }
+    }
+
+    private fun updateCurrentDirectory(result: DirectoryManagerUseCase.Result) {
+        when (result) {
+            is DirectoryManagerUseCase.Result.DirectoryContentDefined -> {
+                _currentParentId.postValue(result.parentId)
+                _directories.postValue(result.directories)
+                _currentVideos.value = result.videos
+            }
+            is DirectoryManagerUseCase.Result.DirectoryContentUnDefined -> {
+            }
+        }
     }
 }

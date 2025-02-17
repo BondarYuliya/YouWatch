@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -21,13 +22,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.groupping.youwatch.business_logic.video.ListItem
+import com.groupping.youwatch.business_logic.video.DirectoryItem
 import com.groupping.youwatch.business_logic.video.VideoItem
+import com.groupping.youwatch.business_logic.video.VideoItemWithWatchingHistory
 import com.groupping.youwatch.business_logic.video_groups.DirectoryEntity
 import com.groupping.youwatch.screens.common.AddingButton
-import com.groupping.youwatch.screens.common.Screen
-import com.groupping.youwatch.screens.video_list.VideoItemComposable
+import com.groupping.youwatch.screens.common.LifecycleObserving
+import com.groupping.youwatch.screens.common.navigation.Screen
+import com.groupping.youwatch.screens.common.VideoItemComposable
 
 @Composable
 fun DirectoryScreen() {
@@ -36,11 +41,19 @@ fun DirectoryScreen() {
     val currentParentId by viewModel.currentParentId.observeAsState(null)
     val isDialogShown by viewModel.isDialogShown.observeAsState(false)
     val newDirectoryName by viewModel.newDirectoryName.observeAsState(TextFieldValue(""))
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LifecycleObserving(
+        lifecycleOwner = lifecycleOwner,
+        eventsList = listOf(
+            Lifecycle.Event.ON_RESUME to { viewModel.navigateToDirectory(currentParentId) }
+        )
+    )
 
     DirectoryScreenMain(
         addingButtonText = "Add Directory",
         onAddButtonClicked = { viewModel.setAddButtonDialogVisibility(true) },
-        listItems = listItems,
+        directoryItems = listItems,
         currentParentId = currentParentId,
         onNavigateBackIfNotInRoot = {
             viewModel.getParentOfCurrentParent { parentIdOfCurrentParent ->
@@ -76,7 +89,7 @@ fun DirectoryScreen() {
 fun DirectoryScreenMain(
     addingButtonText: String,
     onAddButtonClicked: () -> Unit,
-    listItems: List<ListItem>,
+    directoryItems: List<DirectoryItem>,
     currentParentId: Int?,
     onNavigateBackIfNotInRoot: () -> Unit,
     onDirectoryClicked: (clickedDirectory: DirectoryEntity) -> Unit,
@@ -91,7 +104,7 @@ fun DirectoryScreenMain(
             Box(Modifier.padding(padding)) {
                 Column {
                     DirectoryList(
-                        listItems = listItems,
+                        directoryItems = directoryItems,
                         currentParentId = currentParentId,
                         modifier = Modifier
                             .fillMaxSize()
@@ -119,7 +132,7 @@ fun DirectoryScreenMain(
 
 @Composable
 fun DirectoryList(
-    listItems: List<ListItem>,
+    directoryItems: List<DirectoryItem>,
     currentParentId: Int?,
     modifier: Modifier,
     onNavigateBackIfNotInRoot: () -> Unit,
@@ -140,14 +153,14 @@ fun DirectoryList(
             )
         }
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(listItems.size) { index ->
-                when (val item = listItems[index]) {
-                    is ListItem.Directory -> DirectoryItem(item.directory) { clickedDirectory ->
+            items(directoryItems.size) { index ->
+                when (val item = directoryItems[index]) {
+                    is DirectoryItem.Directory -> DirectoryItem(item.directory) { clickedDirectory ->
                         onDirectoryClicked(clickedDirectory)
                     }
 
-                    is ListItem.Video -> VideoItemComposable(
-                        video = item.video,
+                    is DirectoryItem.Video -> VideoItemComposable(
+                        videoWithHistory = item.video,
                         isDirectoryMarked = false,
                         onVideoItemClicked = { videoItemClicked ->
                             onVideoItemClicked(videoItemClicked)

@@ -15,7 +15,6 @@ class YouTubeRepository @Inject constructor(private val youTubeApi: YouTubeApi) 
         data object Empty : FetchingVideosResult()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun fetchAllVideos(channelId: String): FetchingVideosResult =
         withContext(Dispatchers.IO) {
             var nextPageToken: String? = null
@@ -42,15 +41,4 @@ class YouTubeRepository @Inject constructor(private val youTubeApi: YouTubeApi) 
                 FetchingVideosResult.Error(e)
             }
         }
-
-
-//    private suspend fun fetchVideoDuration(videoId: String): String {
-//        return try {
-//            val response = youTubeApi.getVideoDetails(videoId = videoId)
-//            response.items.firstOrNull()?.contentDetails?.duration ?: "PT0S"
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//            "PT0S"
-//        }
-//    }
 }

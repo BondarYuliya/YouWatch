@@ -2,7 +2,7 @@ package com.groupping.youwatch.business_logic.video_groups
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.groupping.youwatch.business_logic.video.ListItem
+import com.groupping.youwatch.business_logic.video.DirectoryItem
 
 @Entity(tableName = "directories")
 data class DirectoryEntity(
@@ -12,6 +12,6 @@ data class DirectoryEntity(
     val parentId: Int? // Nullable to handle root directory with no parent
 )
 
-fun List<DirectoryEntity>.toListItems(): List<ListItem> {
-    return this.map { ListItem.Directory(it) }
+fun List<DirectoryEntity>.toDirectoryItems(): List<DirectoryItem> {
+    return this.map { DirectoryItem.Directory(it) }
 }

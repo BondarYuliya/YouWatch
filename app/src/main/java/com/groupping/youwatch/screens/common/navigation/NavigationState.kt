@@ -1,4 +1,4 @@
-package com.groupping.youwatch.screens.common
+package com.groupping.youwatch.screens.common.navigation
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

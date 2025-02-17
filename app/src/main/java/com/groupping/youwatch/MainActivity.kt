@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.groupping.youwatch.screens.common.App
-import com.groupping.youwatch.screens.common.NavigationState
+import com.groupping.youwatch.screens.common.navigation.App
+import com.groupping.youwatch.screens.common.navigation.NavigationState
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -16,7 +16,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             App(navigationState)
         }

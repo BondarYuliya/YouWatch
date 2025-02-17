@@ -6,7 +6,7 @@ import com.groupping.youwatch.business_logic.channels.YouTubeChannelDao
 import com.groupping.youwatch.business_logic.video.VideoItemsDao
 import com.groupping.youwatch.business_logic.video_groups.DirectoryDao
 import com.groupping.youwatch.business_logic.video_watching.VideoWatchHistoryDao
-import com.groupping.youwatch.screens.common.NavigationState
+import com.groupping.youwatch.screens.common.navigation.NavigationState
 import com.groupping.youwatch.common.database.AppDataBase
 import com.groupping.youwatch.common.network.RetrofitClient
 import com.groupping.youwatch.common.network.YouTubeApi

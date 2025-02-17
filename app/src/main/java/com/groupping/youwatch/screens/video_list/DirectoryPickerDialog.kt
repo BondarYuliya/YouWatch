@@ -14,15 +14,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.groupping.youwatch.business_logic.video.ListItem
+import com.groupping.youwatch.business_logic.video.DirectoryItem
 import com.groupping.youwatch.business_logic.video.VideoItem
+import com.groupping.youwatch.business_logic.video.VideoItemWithWatchingHistory
 import com.groupping.youwatch.business_logic.video_groups.DirectoryEntity
+import com.groupping.youwatch.screens.common.VideoItemComposable
 import com.groupping.youwatch.screens.directories.DirectoryList
 
 @Composable
 fun DirectoryPickerDialog(
     video: VideoItem?,
-    listItems: List<ListItem>,
+    directoryItems: List<DirectoryItem>,
     currentParentId: Int?,
     onNavigateBackIfNotInRoot: () -> Unit,
     onDirectoryClicked: (DirectoryEntity) -> Unit,
@@ -55,7 +57,7 @@ fun DirectoryPickerDialog(
 
                 video?.let {
                     VideoItemComposable(
-                        video = video,
+                        videoWithHistory = VideoItemWithWatchingHistory(video, emptyList()),
                         isDirectoryMarked = false,
                         onVideoItemClicked = {},
                         onVideoItemLongClicked = {}
@@ -63,7 +65,7 @@ fun DirectoryPickerDialog(
                 }
 
                 DirectoryList(
-                    listItems = listItems,
+                    directoryItems = directoryItems,
                     currentParentId = currentParentId,
                     modifier = Modifier
                         .fillMaxSize()

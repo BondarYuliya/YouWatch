@@ -32,7 +32,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.groupping.youwatch.business_logic.channels.DatabaseChannelDetails
 import com.groupping.youwatch.screens.common.AddingButton
-import com.groupping.youwatch.screens.common.Screen
+import com.groupping.youwatch.screens.common.navigation.Screen
 
 @Composable
 fun ChannelsScreen() {
