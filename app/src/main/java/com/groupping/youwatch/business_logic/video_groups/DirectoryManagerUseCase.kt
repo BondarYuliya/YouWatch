@@ -1,9 +1,11 @@
 package com.groupping.youwatch.business_logic.video_groups
 
+import android.util.Log
 import com.groupping.youwatch.business_logic.video.VideoItemWithWatchingHistory
 import com.groupping.youwatch.business_logic.video.VideoItemsDao
 import com.groupping.youwatch.business_logic.video.toVideoItem
 import com.groupping.youwatch.business_logic.video_watching.VideoWatchHistoryDao
+import com.groupping.youwatch.business_logic.video_watching.WatchingUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -11,7 +13,8 @@ import javax.inject.Inject
 class DirectoryManagerUseCase @Inject constructor(
     private val directoryDao: DirectoryDao,
     private val videoItemsDao: VideoItemsDao,
-    private val videoWatchHistoryDao: VideoWatchHistoryDao
+    private val videoWatchHistoryDao: VideoWatchHistoryDao,
+    private val watchingUtils: WatchingUtils
 ) {
 
     sealed class Result {
@@ -78,9 +81,19 @@ class DirectoryManagerUseCase @Inject constructor(
 
             val videoItemsWithHistory = videoEntityList.map { videoEntity ->
                 val watchHistory = videoWatchHistoryDao.getWatchHistory(videoEntity.videoId)
+                Log.e("FFFFF", "Get New History ${watchHistory?.videoWatchHistoryItems}")
+                val videoItem = videoEntity.toVideoItem()
+                val duration = videoItem.duration
+                val watchingPercentage = if (watchHistory != null && duration != null) {
+                    watchingUtils.getWatchedPercent(watchHistory, duration.toInt()) ?: 0.0
+                } else {
+                    0.0
+                }
+
                 VideoItemWithWatchingHistory(
                     videoItem = videoEntity.toVideoItem(),
-                    watchHistory = watchHistory
+                    watchHistory = watchHistory,
+                    watchedPercent = watchingPercentage
                 )
             }
             return@withContext videoItemsWithHistory

@@ -6,7 +6,7 @@ import com.groupping.youwatch.business_logic.video.YouTubeResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-const val YOUTUBE_API_KEY = "AIzaSyCRoung5FvaDh4tX_Ua6VT-nTccfBdgtjM"
+const val YOUTUBE_API_KEY = "AIzaSyDLvDq09liIgV6FJf0ynvgAJXmCMY15694"
 
 interface YouTubeApi {
     @GET("search")

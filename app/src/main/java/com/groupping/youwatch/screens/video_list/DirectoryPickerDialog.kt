@@ -57,7 +57,7 @@ fun DirectoryPickerDialog(
 
                 video?.let {
                     VideoItemComposable(
-                        videoWithHistory = VideoItemWithWatchingHistory(video, emptyList()),
+                        videoWithHistory = VideoItemWithWatchingHistory(video, null, 0.0),
                         isDirectoryMarked = false,
                         onVideoItemClicked = {},
                         onVideoItemLongClicked = {}

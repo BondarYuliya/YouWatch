@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.groupping.youwatch.business_logic.channels.ChannelDetailsEntity
@@ -25,6 +26,7 @@ import kotlin.concurrent.Volatile
         VideoWatchHistory::class],
     version = 4
 )
+@TypeConverters(Converters::class)
 abstract class AppDataBase : RoomDatabase() {
     abstract fun videoItemsDao(): VideoItemsDao
     abstract fun youtubeChannelsDao(): YouTubeChannelDao

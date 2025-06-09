@@ -16,8 +16,8 @@ interface VideoWatchHistoryDao {
     suspend fun updateWatchHistory(videoWatchHistory: VideoWatchHistory)
 
     @Query("SELECT * FROM video_watch_history WHERE videoId = :videoId")
-    suspend fun getWatchHistory(videoId: String): List<VideoWatchHistory>
+    suspend fun getWatchHistory(videoId: String): VideoWatchHistory?
 
-    @Query("SELECT * FROM video_watch_history WHERE videoId = :videoId AND isCompleted = 0 LIMIT 1")
-    suspend fun getUncompletedWatchHistory(videoId: String): VideoWatchHistory?
+//    @Query("SELECT * FROM video_watch_history WHERE videoId = :videoId AND isCompleted = 0 LIMIT 1")
+//    suspend fun getUncompletedWatchHistory(videoId: String): VideoWatchHistory?
 }

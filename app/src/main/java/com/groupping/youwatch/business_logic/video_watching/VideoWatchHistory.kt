@@ -8,8 +8,12 @@ data class VideoWatchHistory(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val videoId: String,
-    val startTime: Long,
-    val durationWatched: Long,
-    val stoppedAt: Float,
-    val isCompleted: Boolean
+    val videoWatchHistoryItems: List<VideoWatchHistoryItem>,
+    val fullyWatchedTimes: List<Long>
 )
+
+data class VideoWatchHistoryItem(
+    val watchingDate: Long,
+    val watchedSeconds: List<Int>
+)
+

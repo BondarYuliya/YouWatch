@@ -27,9 +27,9 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.groupping.youwatch.business_logic.video.VideoItem
 import com.groupping.youwatch.business_logic.video.VideoItemWithWatchingHistory
-import com.groupping.youwatch.ui.theme.PurpleGrey80
 import com.groupping.youwatch.ui.theme.TextGreen
 import com.groupping.youwatch.ui.theme.TextRed
+import kotlin.math.round
 
 
 @Composable
@@ -43,12 +43,12 @@ fun VideoItemComposable(
     val history by remember { mutableStateOf(videoWithHistory.watchHistory) }
 
     val isInactive = video.directoryId != null
-    val textColor = if (isDirectoryMarked && isInactive) Color.Gray else MaterialTheme.colorScheme.onSurface
+    val textColor =
+        if (isDirectoryMarked && isInactive) Color.Gray else MaterialTheme.colorScheme.onSurface
     val thumbnailAlpha = if (isDirectoryMarked && isInactive) 0.3f else 1f
 
-    val completedCount = history.count { it.isCompleted }
-    val latestWatched = history.lastOrNull { !it.isCompleted }?.durationWatched ?: 0
-    val percentWatched = latestWatched.toInt()
+    val completedCount = history?.fullyWatchedTimes?.size ?: 0
+    val percentWatched = videoWithHistory.watchedPercent
 
     Row(
         Modifier
@@ -78,7 +78,7 @@ fun VideoItemComposable(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (completedCount > 0){
+            if (completedCount > 0) {
                 Text(
                     text = "Completed: $completedCount",
                     style = MaterialTheme.typography.bodySmall,
@@ -87,9 +87,9 @@ fun VideoItemComposable(
             }
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (percentWatched != 0)  {
+            if (percentWatched != 0.0) {
                 Text(
-                    text = "Watched: $percentWatched%",
+                    text = "Watched: ${(percentWatched * 100).toInt()}%",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextRed
                 )
@@ -97,8 +97,6 @@ fun VideoItemComposable(
         }
     }
 }
-
-
 
 @Composable
 fun VideoListScreenMain(

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,7 +38,7 @@ import com.groupping.youwatch.screens.common.VideoItemComposable
 @Composable
 fun DirectoryScreen() {
     val viewModel: DirectoryViewModel = viewModel()
-    val listItems by viewModel.combinedList.observeAsState(emptyList())
+    val listItems by rememberUpdatedState(viewModel.combinedList.observeAsState(emptyList()).value)
     val currentParentId by viewModel.currentParentId.observeAsState(null)
     val isDialogShown by viewModel.isDialogShown.observeAsState(false)
     val newDirectoryName by viewModel.newDirectoryName.observeAsState(TextFieldValue(""))

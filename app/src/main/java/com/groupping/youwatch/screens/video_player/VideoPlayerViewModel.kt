@@ -1,19 +1,23 @@
 package com.groupping.youwatch.screens.video_player
 
 import android.util.Log
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.groupping.youwatch.business_logic.video.VideoItem
 import com.groupping.youwatch.business_logic.video.VideoItemsDao
 import com.groupping.youwatch.business_logic.video_watching.VideoWatchHistory
 import com.groupping.youwatch.business_logic.video_watching.VideoWatchHistoryDao
+import com.groupping.youwatch.business_logic.video_watching.VideoWatchHistoryItem
+import com.groupping.youwatch.business_logic.video_watching.VideoWatchUseCase
 import com.groupping.youwatch.screens.common.navigation.NavigationState
 import com.groupping.youwatch.screens.common.navigation.NavigationViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.Dispatcher
 import javax.inject.Inject
 
 
@@ -21,72 +25,94 @@ import javax.inject.Inject
 class VideoPlayerViewModel @Inject constructor(
     navigationState: NavigationState,
     private val videoWatchHistoryDao: VideoWatchHistoryDao,
-    private val videoItemsDao: VideoItemsDao
+    private val videoItemsDao: VideoItemsDao,
+    private val videoWatchUseCase: VideoWatchUseCase
 ) : NavigationViewModel(navigationState) {
 
-    private val startTime = MutableLiveData<Long>(0)
-    private var stoppedAt = MutableLiveData<Float>(0f)
     private var currentVideo = MutableLiveData<VideoItem>()
     private var currentWatchHistory = MutableLiveData<VideoWatchHistory?>()
+    private var currentWatchHistoryItem = MutableLiveData<VideoWatchHistoryItem?>()
 
-    val watchState: LiveData<Float?> = currentWatchHistory.map {
-        it?.stoppedAt
-    }
+    private val _watchState = MutableLiveData(0f)
+    val watchState: LiveData<Float> = _watchState
 
     fun getCurrentWatchHistory(video: VideoItem) {
         viewModelScope.launch {
-            val dataBaseHistory = videoWatchHistoryDao.getUncompletedWatchHistory(video.id.videoId)
+            val dataBaseHistory = videoWatchHistoryDao.getWatchHistory(video.id.videoId)
             if (dataBaseHistory == null) {
-                val currentTime = System.currentTimeMillis()
-                startTime.postValue(currentTime)
+                val historyItem = VideoWatchHistoryItem(
+                    watchingDate = System.currentTimeMillis(),
+                    watchedSeconds = listOf(0)
+                )
                 val history = VideoWatchHistory(
                     videoId = video.id.videoId,
-                    startTime = currentTime,
-                    durationWatched = 0,
-                    stoppedAt = 0f,
-                    isCompleted = false
+                    videoWatchHistoryItems = listOf(historyItem),
+                    fullyWatchedTimes = emptyList(),
                 )
                 val id = videoWatchHistoryDao.insertWatchHistory(history)
                 currentWatchHistory.postValue(history.copy(id = id.toInt()))
+                currentWatchHistoryItem.postValue(historyItem)
+                _watchState.postValue(0f)
             } else {
-                currentWatchHistory.value = dataBaseHistory
+                val historyItem = getWatchHistoryItem(dataBaseHistory)
+                currentWatchHistory.postValue(historyItem.first)
+                currentWatchHistoryItem.postValue(historyItem.second)
+                val lastSecond = historyItem.second.watchedSeconds.maxOrNull() ?: 0
+                _watchState.postValue(lastSecond.toFloat())
             }
         }
     }
 
-    fun stopWatching(video: VideoItem) {
-        viewModelScope.launch(Dispatchers.Main.immediate) {
-            val totalDuration = currentVideo.value?.duration
-            val notWatchedPart = totalDuration?.minus(stoppedAt.value ?: 0f) ?: 0f
+    fun stopWatching() {
+        checkParametersAndUpdateHistory(null)
+    }
 
-            val durationWatched: Long = when {
-                totalDuration != null -> (100 * (1 - notWatchedPart / totalDuration)).toLong()
-                else -> 0
-            }
 
-            val currentCompleted = durationWatched > 94
-            val currentTime = if (currentCompleted) 0f else stoppedAt.value ?: 0f
+    fun watchedAt(currentSecond: Float) {
+        checkParametersAndUpdateHistory(currentSecond)
+    }
 
-            currentWatchHistory.value?.let { currentHistory ->
-                val updatedWatchHistory = VideoWatchHistory(
-                    id = currentHistory.id,
-                    videoId = video.id.videoId,
-                    startTime = currentHistory.startTime,
-                    durationWatched = durationWatched,
-                    stoppedAt = currentTime,
-                    isCompleted = currentCompleted,
-                )
-                currentWatchHistory.postValue(updatedWatchHistory)
-                videoWatchHistoryDao.updateWatchHistory(updatedWatchHistory)
+    private fun checkParametersAndUpdateHistory(currentSecond: Float?) {
+        val history = currentWatchHistory.value
+        val item = currentWatchHistoryItem.value
+        val duration = currentVideo.value?.duration
+
+        if (history != null && item != null && duration != null) {
+            viewModelScope.launch(Dispatchers.Main) {
+                watchHistoryUpdating {
+                    if (currentSecond != null) {
+                        videoWatchUseCase.performWatchedAtSecond(
+                            history,
+                            item,
+                            currentSecond.toInt(),
+                            duration.toInt()
+                        )
+                    } else {
+                        videoWatchUseCase.checkFinishingAndPerformUpdating(
+                            history,
+                            item,
+                            null,
+                            duration.toInt()
+                        )
+                    }
+                }
             }
         }
     }
 
-    fun stoppedAt(currentSecond: Float) {
-        val lastStoppedAt = watchState.value ?: 0f
-        if (currentSecond > lastStoppedAt) {
-            stoppedAt.postValue(currentSecond)
-            currentWatchHistory.value = currentWatchHistory.value?.copy(stoppedAt = currentSecond)
+
+    private suspend fun watchHistoryUpdating(
+        performHistoryUpdating: suspend () -> VideoWatchUseCase.WatchingHistoryUpdatingResult
+    ) {
+        when (val result = performHistoryUpdating()) {
+            is VideoWatchUseCase.WatchingHistoryUpdatingResult.WatchingHistoryNoUpdating -> {
+                Log.d("VideoPlayerViewModel", "No updating of watching history")
+            }
+
+            is VideoWatchUseCase.WatchingHistoryUpdatingResult.WatchingHistoryUpdated -> {
+                currentWatchHistoryItem.postValue(result.item)
+                currentWatchHistory.postValue(result.history)
+            }
         }
     }
 
@@ -100,5 +126,27 @@ class VideoPlayerViewModel @Inject constructor(
         }
     }
 
+    private suspend fun getWatchHistoryItem(dataBaseHistory: VideoWatchHistory): Pair<VideoWatchHistory, VideoWatchHistoryItem> {
+        val allWatchedSeconds = dataBaseHistory.videoWatchHistoryItems
+            .flatMap { it.watchedSeconds }
+            .toSet()
+            .sorted()
 
+        val lastMatchedBeforeInterruption = allWatchedSeconds
+            .withIndex()
+            .takeWhile { it.value == it.index }
+            .lastOrNull()
+            ?.value
+            ?: 0
+
+        val newItem = VideoWatchHistoryItem(
+            watchingDate = System.currentTimeMillis(),
+            watchedSeconds = listOf(lastMatchedBeforeInterruption)
+        )
+
+        val newItems = dataBaseHistory.videoWatchHistoryItems.plus(listOf(newItem))
+        val newHistory = dataBaseHistory.copy(videoWatchHistoryItems = newItems)
+        videoWatchHistoryDao.updateWatchHistory(newHistory)
+        return Pair(newHistory, newItem)
+    }
 }

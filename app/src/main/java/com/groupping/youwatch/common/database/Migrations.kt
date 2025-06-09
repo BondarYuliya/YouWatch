@@ -55,7 +55,6 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
 
 val MIGRATION_3_4 = object : Migration(3, 4) {
     override fun migrate(database: SupportSQLiteDatabase) {
-        // Create a new table without the 'endTime' column
         database.execSQL(
             """
             CREATE TABLE video_watch_history_new (
@@ -69,7 +68,6 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
             """.trimIndent()
         )
 
-        // Copy data from the old table to the new table (excluding `endTime`)
         database.execSQL(
             """
             INSERT INTO video_watch_history_new (id, videoId, startTime, durationWatched, stoppedAt, isCompleted)
@@ -77,10 +75,8 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
             """.trimIndent()
         )
 
-        // Remove the old table
         database.execSQL("DROP TABLE video_watch_history")
 
-        // Rename the new table to match the original table name
         database.execSQL("ALTER TABLE video_watch_history_new RENAME TO video_watch_history")
     }
 }

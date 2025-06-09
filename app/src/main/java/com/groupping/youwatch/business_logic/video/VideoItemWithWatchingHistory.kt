@@ -4,5 +4,6 @@ import com.groupping.youwatch.business_logic.video_watching.VideoWatchHistory
 
 data class VideoItemWithWatchingHistory(
     val videoItem: VideoItem,
-    val watchHistory: List<VideoWatchHistory>
+    val watchHistory: VideoWatchHistory?,
+    val watchedPercent: Double
 )

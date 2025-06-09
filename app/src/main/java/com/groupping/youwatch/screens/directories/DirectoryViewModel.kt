@@ -1,5 +1,6 @@
 package com.groupping.youwatch.screens.directories
 
+import android.util.Log
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
@@ -31,14 +32,17 @@ class DirectoryViewModel @Inject constructor(
         fun update() {
             val directories = _directories.value?.map { DirectoryItem.Directory(it) } ?: emptyList()
             val videos = _currentVideos.value?.map { DirectoryItem.Video(it) } ?: emptyList()
-            value = directories + videos
+
+            //Log.e("FFFFF", "Updated Video List 1: ${videos.map { it.video.watchHistory?.videoWatchHistoryItems?.durationWatched }}")
+
+            postValue(directories + videos)
         }
 
         addSource(_directories) { update() }
         addSource(_currentVideos) { update() }
     }
 
-    val combinedList: LiveData<List<DirectoryItem>> get() = _combinedList
+    val combinedList: LiveData<List<DirectoryItem>> = _combinedList
 
     private val _currentParentId = MutableLiveData<Int?>(null) // Root by default
     val currentParentId: LiveData<Int?> get() = _currentParentId
@@ -54,6 +58,7 @@ class DirectoryViewModel @Inject constructor(
     }
 
     fun navigateToDirectory(parentId: Int?) {
+        _combinedList.postValue(emptyList())
         if (parentId != null) {
             fetchDirectories(parentId)
         } else {
@@ -104,7 +109,7 @@ class DirectoryViewModel @Inject constructor(
             is DirectoryManagerUseCase.Result.DirectoryContentDefined -> {
                 _currentParentId.postValue(result.parentId)
                 _directories.postValue(result.directories)
-                _currentVideos.value = result.videos
+                _currentVideos.postValue(result.videos)
             }
             is DirectoryManagerUseCase.Result.DirectoryContentUnDefined -> {
             }
