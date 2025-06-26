@@ -24,7 +24,7 @@ import kotlin.concurrent.Volatile
         DirectoryEntity::class,
         VideoByDirectoriesEntity::class,
         VideoWatchHistory::class],
-    version = 4
+    version = 5
 )
 @TypeConverters(Converters::class)
 abstract class AppDataBase : RoomDatabase() {
@@ -44,7 +44,7 @@ abstract class AppDataBase : RoomDatabase() {
                     AppDataBase::class.java,
                     "app_database"
                 )
-                    .addMigrations(MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                 INSTANSE = instance
                 instance

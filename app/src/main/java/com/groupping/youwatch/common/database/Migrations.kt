@@ -81,4 +81,18 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
     }
 }
 
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("DROP TABLE IF EXISTS video_watch_history")
+        database.execSQL("""
+            CREATE TABLE video_watch_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                videoId TEXT NOT NULL,
+                videoWatchHistoryItems TEXT NOT NULL,
+                fullyWatchedTimes TEXT NOT NULL
+            )
+        """.trimIndent())
+    }
+}
+
 
