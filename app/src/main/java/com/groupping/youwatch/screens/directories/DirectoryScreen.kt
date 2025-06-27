@@ -36,7 +36,7 @@ import com.groupping.youwatch.screens.common.navigation.Screen
 import com.groupping.youwatch.screens.common.VideoItemComposable
 
 @Composable
-fun DirectoryScreen() {
+fun DirectoryScreen(directoryId: Int?=null) {
     val viewModel: DirectoryViewModel = viewModel()
     val listItems by rememberUpdatedState(viewModel.combinedList.observeAsState(emptyList()).value)
     val currentParentId by viewModel.currentParentId.observeAsState(null)
@@ -47,7 +47,7 @@ fun DirectoryScreen() {
     LifecycleObserving(
         lifecycleOwner = lifecycleOwner,
         eventsList = listOf(
-            Lifecycle.Event.ON_RESUME to { viewModel.navigateToDirectory(currentParentId) }
+            Lifecycle.Event.ON_RESUME to { viewModel.navigateToDirectory(directoryId) }
         )
     )
 

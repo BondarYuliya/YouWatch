@@ -19,6 +19,7 @@ import com.groupping.youwatch.business_logic.video.VideoItem
 import com.groupping.youwatch.business_logic.video.VideoItemWithWatchingHistory
 import com.groupping.youwatch.business_logic.video_groups.DirectoryEntity
 import com.groupping.youwatch.screens.common.VideoItemComposable
+import com.groupping.youwatch.screens.common.navigation.Screen
 import com.groupping.youwatch.screens.directories.DirectoryList
 
 @Composable
@@ -28,6 +29,7 @@ fun DirectoryPickerDialog(
     currentParentId: Int?,
     onNavigateBackIfNotInRoot: () -> Unit,
     onDirectoryClicked: (DirectoryEntity) -> Unit,
+    onChangeDirectoryClicked: (Int?) -> Unit,
     onDirectorySelected: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -62,6 +64,15 @@ fun DirectoryPickerDialog(
                         onVideoItemClicked = {},
                         onVideoItemLongClicked = {}
                     )
+                }
+
+                Button(
+                    onClick = { onChangeDirectoryClicked(currentParentId) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                ) {
+                    Text("Change the Directory")
                 }
 
                 DirectoryList(

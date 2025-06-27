@@ -52,15 +52,12 @@ class VideoListViewModel @Inject constructor(
     private suspend fun fetchYoutubeVideosInChannel(channelId: String) {
         when (val result = repository.fetchAllVideos(channelId)) {
             is YouTubeRepository.FetchingVideosResult.Success -> {
-                Log.e("GGGGGGGGG", "fetchAllVideos Success: ${result.videos}")
                 _youtubeVideos.postValue(result.videos)
             }
             is YouTubeRepository.FetchingVideosResult.Error -> {
-                Log.e("GGGGGGGGG", "fetchAllVideos Error: ${result.exception.message}")
                 _error.postValue("Failed to load videos: ${result.exception.message}")
             }
             is YouTubeRepository.FetchingVideosResult.Empty -> {
-                Log.e("GGGGGGGGG", "fetchAllVideos Empty")
                 _error.postValue("No videos found for the channel.")
             }
         }

@@ -13,8 +13,8 @@ import com.groupping.youwatch.screens.video_list.VideoListScreen
 
 sealed class Screen {
     data object MainScreen : Screen()
-    data object DirectoryScreen : Screen()
     data object ChannelsScreen : Screen()
+    data class DirectoryScreen(val directoryId: Int?=null) : Screen()
     data class VideoListScreen(val databaseChannelId: Long, val youtubeChannelId: String) : Screen()
     data class VideoPlayerScreen(val video: VideoItem) : Screen()
 }
@@ -22,11 +22,13 @@ sealed class Screen {
 @Composable
 fun App(navigationState: NavigationState) {
     val currentScreen by navigationState.currentScreen.observeAsState(Screen.MainScreen)
-
     when (currentScreen) {
         is Screen.MainScreen -> MainScreen()
-        is Screen.DirectoryScreen -> DirectoryScreen()
         is Screen.ChannelsScreen -> ChannelsScreen()
+        is Screen.DirectoryScreen -> {
+            val directoryScreen = currentScreen as Screen.DirectoryScreen
+            DirectoryScreen(directoryId = directoryScreen.directoryId)
+        }
         is Screen.VideoListScreen -> {
             val videoListScreen = currentScreen as Screen.VideoListScreen
             VideoListScreen(
@@ -34,10 +36,9 @@ fun App(navigationState: NavigationState) {
                 channelId = videoListScreen.youtubeChannelId
             )
         }
-
         is Screen.VideoPlayerScreen -> {
-            val videoListScreen = currentScreen as Screen.VideoPlayerScreen
-            VideoPlayerScreen(video = videoListScreen.video)
+            val videoPlayerScreen = currentScreen as Screen.VideoPlayerScreen
+            VideoPlayerScreen(video = videoPlayerScreen.video)
         }
     }
 }

@@ -28,13 +28,11 @@ class DirectoryViewModel @Inject constructor(
     val directories: LiveData<List<DirectoryEntity>> get() = _directories
 
     private val _currentVideos = MutableLiveData<List<VideoItemWithWatchingHistory>>(emptyList())
+
     private val _combinedList = MediatorLiveData<List<DirectoryItem>>().apply {
         fun update() {
             val directories = _directories.value?.map { DirectoryItem.Directory(it) } ?: emptyList()
             val videos = _currentVideos.value?.map { DirectoryItem.Video(it) } ?: emptyList()
-
-            //Log.e("FFFFF", "Updated Video List 1: ${videos.map { it.video.watchHistory?.videoWatchHistoryItems?.durationWatched }}")
-
             postValue(directories + videos)
         }
 
@@ -53,6 +51,9 @@ class DirectoryViewModel @Inject constructor(
     private val _newDirectoryName = MutableLiveData(TextFieldValue(""))
     val newDirectoryName: LiveData<TextFieldValue> = _newDirectoryName
 
+    private val _selectedVideoItemForDirectoryPicker = MutableLiveData<VideoItem?>()
+    val selectedVideoItemForDirectoryPicker: LiveData<VideoItem?> = _selectedVideoItemForDirectoryPicker
+
     fun setAddButtonDialogVisibility(isShown: Boolean) {
         _isDialogShown.postValue(isShown)
     }
@@ -70,6 +71,10 @@ class DirectoryViewModel @Inject constructor(
         viewModelScope.launch {
             directoryManagerUseCase.getParentOfCurrentParent(_currentParentId.value, callback)
         }
+    }
+
+    fun onVideoSelectedForPickingDirectory(selectedVideoItem: VideoItem?) {
+        _selectedVideoItemForDirectoryPicker.postValue(selectedVideoItem)
     }
 
     fun onAddDirectoryConfirmed(directoryName: String) {

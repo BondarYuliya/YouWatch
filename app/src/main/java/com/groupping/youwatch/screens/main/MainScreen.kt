@@ -17,7 +17,7 @@ import com.groupping.youwatch.screens.common.navigation.Screen
 fun MainScreen() {
     val viewModel: MainScreenViewModel = viewModel()
     MainScreenMain(
-        onDirectoryClicked = { viewModel.navigateTo(Screen.DirectoryScreen) },
+        onDirectoryClicked = { viewModel.navigateTo(Screen.DirectoryScreen()) },
         onChannelsClicked = { viewModel.navigateTo(Screen.ChannelsScreen) },
     )
     BackHandler {

@@ -24,7 +24,7 @@ fun VideoListScreen(databaseChannelId: Long, channelId: String) {
     val currentParentId by dialogListViewModel.currentParentId.observeAsState(null)
     val showDirectoryPickerDialog by viewModel.showDirectoryPickerDialog.observeAsState(false)
 
-    var selectedVideoItemForDirectoryPicker by remember { mutableStateOf<VideoItem?>(null) }
+    val selectedVideoItemForDirectoryPicker by dialogListViewModel.selectedVideoItemForDirectoryPicker.observeAsState(null)
 
     val videoItems by viewModel.allVideos.observeAsState(emptyList())
 
@@ -44,7 +44,7 @@ fun VideoListScreen(databaseChannelId: Long, channelId: String) {
             viewModel.videoItemDialogPickerSelected(
                 true
             )
-            selectedVideoItemForDirectoryPicker = videoItemClicked
+            dialogListViewModel.onVideoSelectedForPickingDirectory(videoItemClicked)
         }
     )
 
@@ -63,7 +63,7 @@ fun VideoListScreen(databaseChannelId: Long, channelId: String) {
                     clickedDirectory.id
                 )
             },
-            onDirectorySelected = {directoryId ->
+            onDirectorySelected = { directoryId ->
                 viewModel.videoItemDialogPickerSelected(
                     false
                 )
@@ -71,12 +71,19 @@ fun VideoListScreen(databaseChannelId: Long, channelId: String) {
                     viewModel.videoItemDialogPickerSelected(it, directoryId)
                 }
             },
+            onChangeDirectoryClicked = { directoryId ->
+                viewModel.navigateTo(
+                    Screen.DirectoryScreen(
+                        directoryId
+                    )
+                )
+            },
 
             onDismiss = {
                 viewModel.videoItemDialogPickerSelected(
                     false
                 )
-                selectedVideoItemForDirectoryPicker = null
+                dialogListViewModel.onVideoSelectedForPickingDirectory(null)
             }
         )
     }
