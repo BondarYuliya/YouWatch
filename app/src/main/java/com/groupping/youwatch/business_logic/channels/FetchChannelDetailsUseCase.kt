@@ -1,5 +1,6 @@
 package com.groupping.youwatch.business_logic.channels
 
+import android.util.Log
 import com.groupping.youwatch.common.network.YouTubeApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,10 +22,14 @@ class FetchChannelDetailsUseCase @Inject constructor(private val youTubeApi: You
                         subscriberCount = channel.statistics.subscriberCount.toLong()
                     )
                 } else {
+                    Log.e(
+                        this@FetchChannelDetailsUseCase::class.java.simpleName,
+                        "Method youTubeApi.getChannelDetails returned empty itemsList"
+                    )
                     null
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(this@FetchChannelDetailsUseCase::class.java.simpleName, "Error fetching channel", e)
                 null
             }
         }

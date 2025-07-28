@@ -8,8 +8,6 @@ import com.groupping.youwatch.business_logic.video_groups.DirectoryDao
 import com.groupping.youwatch.business_logic.video_watching.VideoWatchHistoryDao
 import com.groupping.youwatch.screens.common.navigation.NavigationState
 import com.groupping.youwatch.common.database.AppDataBase
-import com.groupping.youwatch.common.network.RetrofitClient
-import com.groupping.youwatch.common.network.YouTubeApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -59,17 +57,5 @@ class AppModule {
     @AppScope
     fun navigationState(): NavigationState {
         return NavigationState()
-    }
-
-    @Provides
-    @AppScope
-    fun youtubeAPI(retrofitClient: RetrofitClient): YouTubeApi{
-        return retrofitClient.getYoutubeAPI()
-    }
-
-    @Provides
-    @AppScope
-    fun retrofitClient(): RetrofitClient{
-        return RetrofitClient()
     }
 }
